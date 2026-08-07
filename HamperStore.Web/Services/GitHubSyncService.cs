@@ -218,8 +218,67 @@ namespace HamperStore.Web.Services
             }
         }
 
+        private async Task EnsureBranchExistsAsync()
+        {
+            var url = $"https://api.github.com/repos/{_username}/{_repo}/git/ref/heads/{_branch}";
+            using var response = await _client.GetAsync(url);
+            if (response.IsSuccessStatusCode)
+            {
+                // Branch exists
+                return;
+            }
+
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                _logger.LogInformation("Branch '{Branch}' not found. Attempting to create it from default branch...", _branch);
+
+                // 1. Get default branch commit SHA
+                string? baseSha = null;
+                foreach (var baseBranch in new[] { "main", "master" })
+                {
+                    var baseBranchUrl = $"https://api.github.com/repos/{_username}/{_repo}/git/ref/heads/{baseBranch}";
+                    using var baseResponse = await _client.GetAsync(baseBranchUrl);
+                    if (baseResponse.IsSuccessStatusCode)
+                    {
+                        var content = await baseResponse.Content.ReadAsStringAsync();
+                        using var doc = JsonDocument.Parse(content);
+                        baseSha = doc.RootElement.GetProperty("object").GetProperty("sha").GetString();
+                        break;
+                    }
+                }
+
+                if (string.IsNullOrEmpty(baseSha))
+                {
+                    throw new Exception("Could not find base branch ('main' or 'master') to create the sync branch.");
+                }
+
+                // 2. Create the branch reference
+                var createRefUrl = $"https://api.github.com/repos/{_username}/{_repo}/git/refs";
+                var payload = new JsonObject
+                {
+                    ["ref"] = $"refs/heads/{_branch}",
+                    ["sha"] = baseSha
+                };
+
+                using var createResponse = await _client.PostAsync(
+                    createRefUrl, 
+                    new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json"));
+
+                if (!createResponse.IsSuccessStatusCode)
+                {
+                    var errContent = await createResponse.Content.ReadAsStringAsync();
+                    throw new Exception($"Failed to create branch '{_branch}' via API: {createResponse.StatusCode}. Details: {errContent}");
+                }
+
+                _logger.LogInformation("Successfully created sync branch '{Branch}' on GitHub.", _branch);
+            }
+        }
+
         private async Task PushFileToGitHubAsync(string path, byte[] content, string commitMessage)
         {
+            // Ensure target branch exists first
+            await EnsureBranchExistsAsync();
+
             var url = $"https://api.github.com/repos/{_username}/{_repo}/contents/{path}";
 
             // 1. Get SHA if file already exists

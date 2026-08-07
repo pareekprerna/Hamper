@@ -9,3 +9,4 @@ C:\Users\Anshu\Downloads\Freelance\Hamper\HamperStore.Core\obj\Debug\net9.0\Hamp
 C:\Users\Anshu\Downloads\Freelance\Hamper\HamperStore.Core\obj\Debug\net9.0\refint\HamperStore.Core.dll
 C:\Users\Anshu\Downloads\Freelance\Hamper\HamperStore.Core\obj\Debug\net9.0\HamperStore.Core.pdb
 C:\Users\Anshu\Downloads\Freelance\Hamper\HamperStore.Core\obj\Debug\net9.0\ref\HamperStore.Core.dll
+C:\Users\Anshu\Downloads\Freelance\Hamper\HamperStore.Core\obj\Debug\net9.0\HamperStore.Core.sourcelink.json

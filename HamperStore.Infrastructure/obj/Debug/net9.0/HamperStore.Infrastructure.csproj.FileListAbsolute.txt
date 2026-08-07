@@ -15,3 +15,4 @@ C:\Users\Anshu\Downloads\Freelance\Hamper\HamperStore.Infrastructure\obj\Debug\n
 C:\Users\Anshu\Downloads\Freelance\Hamper\HamperStore.Infrastructure\obj\Debug\net9.0\HamperStore.Infrastructure.pdb
 C:\Users\Anshu\Downloads\Freelance\Hamper\HamperStore.Infrastructure\obj\Debug\net9.0\HamperStore.Infrastructure.genruntimeconfig.cache
 C:\Users\Anshu\Downloads\Freelance\Hamper\HamperStore.Infrastructure\obj\Debug\net9.0\ref\HamperStore.Infrastructure.dll
+C:\Users\Anshu\Downloads\Freelance\Hamper\HamperStore.Infrastructure\obj\Debug\net9.0\HamperStore.Infrastructure.sourcelink.json
