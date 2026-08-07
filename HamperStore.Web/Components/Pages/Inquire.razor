@@ -1,0 +1,259 @@
+@page "/inquire"
+@using HamperStore.Core.Entities
+@using HamperStore.Core.Interfaces
+@using HamperStore.Web.Models
+@inject IHamperRepository HamperRepo
+@inject IInquiryService InquiryService
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+<PageTitle>Book an Inquiry - The Hamperly Gifts</PageTitle>
+
+<div class="container-custom py-5">
+    @if (isSubmitted)
+    {
+        <div class="success-card">
+            <div class="success-icon-wrapper">
+                <i class="bi bi-check-circle-fill"></i>
+            </div>
+            <h2>Inquiry Received</h2>
+            <p>Thank you for choosing The Hamperly Gifts! Our curation team will review your requirements and reach out to you within 24 hours.</p>
+            
+            <div class="success-details">
+                <div class="success-detail-row">
+                    <span>Reference ID:</span>
+                    <span id="submitted-ref-id">@submittedInquiryId</span>
+                </div>
+                <div class="success-detail-row">
+                    <span>Customer Name:</span>
+                    <span>@model.Name</span>
+                </div>
+                <div class="success-detail-row">
+                    <span>Phone:</span>
+                    <span>@model.Phone</span>
+                </div>
+                @if (selectedHamper != null)
+                {
+                    <div class="success-detail-row">
+                        <span>Selected Hamper:</span>
+                        <span>@selectedHamper.Name (Base Price: ₹@selectedHamper.BasePrice.ToString("F0"))</span>
+                    </div>
+                }
+                @if (model.Budget.HasValue)
+                {
+                    <div class="success-detail-row">
+                        <span>Specified Budget:</span>
+                        <span>₹@model.Budget.Value.ToString("F0")</span>
+                    </div>
+                }
+            </div>
+
+            <div class="d-flex justify-content-center gap-3">
+                <a href="hampers" class="btn-luxury-primary">
+                    <i class="bi bi-grid-fill"></i> Explore More Hampers
+                </a>
+                <button @onclick="ResetForm" class="btn-luxury-secondary">
+                    New Inquiry
+                </button>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="section-title">
+            <h2>Start Your Inquiry</h2>
+            <p>Tell us about your occasion, destination, and customization preferences. We will handle the rest.</p>
+        </div>
+
+        <div class="inquiry-split">
+            <!-- Left Side: Form -->
+            <div class="inquiry-card">
+                <h3 class="inquiry-form-title">Tell Us What You Need</h3>
+                <p class="inquiry-form-subtitle">Fill in the details below and we will contact you with curated options.</p>
+
+                <EditForm Model="model" OnValidSubmit="HandleSubmitAsync">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary class="alert alert-danger" />
+
+                    <div class="form-grid">
+                        <div class="form-group-custom">
+                            <label for="name">Your Name *</label>
+                            <InputText id="name" @bind-Value="model.Name" class="form-control-custom" placeholder="Enter your full name" />
+                            <ValidationMessage For="() => model.Name" class="text-danger small mt-1" />
+                        </div>
+
+                        <div class="form-group-custom">
+                            <label for="phone">Phone Number *</label>
+                            <InputText id="phone" @bind-Value="model.Phone" class="form-control-custom" placeholder="e.g. +91 9876543210" />
+                            <ValidationMessage For="() => model.Phone" class="text-danger small mt-1" />
+                        </div>
+
+                        <div class="form-group-custom">
+                            <label for="email">Email Address</label>
+                            <InputText id="email" @bind-Value="model.Email" class="form-control-custom" placeholder="Enter email (optional)" />
+                            <ValidationMessage For="() => model.Email" class="text-danger small mt-1" />
+                        </div>
+
+                        <div class="form-group-custom">
+                            <label for="city">Delivery City *</label>
+                            <InputSelect id="city" @bind-Value="model.CityId" class="form-control-custom">
+                                <option value="0">Select delivery city</option>
+                                @foreach (var city in cities)
+                                {
+                                    <option value="@city.Id">@city.Name (Fee: ₹@city.DeliveryFee.ToString("F0"), Days: @city.DeliveryDays)</option>
+                                }
+                            </InputSelect>
+                            <ValidationMessage For="() => model.CityId" class="text-danger small mt-1" />
+                        </div>
+
+                        <div class="form-group-custom">
+                            <label for="occasion">Occasion</label>
+                            <InputText id="occasion" @bind-Value="model.Occasion" class="form-control-custom" placeholder="e.g. Rakhi, Birthday, Diwali, Wedding" />
+                        </div>
+
+                        <div class="form-group-custom">
+                            <label for="budget">Total Budget (₹)</label>
+                            <InputNumber id="budget" @bind-Value="model.Budget" class="form-control-custom" placeholder="e.g. 500" />
+                        </div>
+
+                        <div class="form-group-custom full-width">
+                            <label for="hamper">Selected Hamper Base</label>
+                            <InputSelect id="hamper" Value="model.HamperId" ValueExpression="() => model.HamperId" ValueChanged="(int? val) => OnHamperChanged(val)" class="form-control-custom">
+                                <option value="">Choose a hamper template</option>
+                                @foreach (var hamper in hampers)
+                                {
+                                    <option value="@hamper.Id">@hamper.Name (₹@hamper.BasePrice.ToString("F0"))</option>
+                                }
+                            </InputSelect>
+                        </div>
+
+                        <div class="form-group-custom full-width">
+                            <label for="message">Customization Requirements & Message</label>
+                            <InputTextArea id="message" @bind-Value="model.Message" class="form-control-custom" rows="4" placeholder="Tell us if you want to add/remove specific chocolates, include a greeting card, customize color themes, etc." />
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-form-submit w-100" disabled="@isSubmitting">
+                        @if (isSubmitting)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                            <span>Submitting Request...</span>
+                        }
+                        else
+                        {
+                            <i class="bi bi-send-fill"></i>
+                            <span>Submit Gifting Inquiry</span>
+                        }
+                    </button>
+                </EditForm>
+            </div>
+
+            <!-- Right Side: Summary Widget -->
+            <aside class="summary-widget">
+                <h3 class="summary-widget-title">Selected Hamper</h3>
+                
+                @if (selectedHamper == null)
+                {
+                    <div class="text-center py-4 text-muted">
+                        <i class="bi bi-box-seam" style="font-size: 2.5rem; display: block; margin-bottom: 1rem; color: var(--accent);"></i>
+                        <p>No hamper template selected.</p>
+                        <p class="small">Choose one from the dropdown to view its contents here, or submit a custom inquiry.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="summary-product-card">
+                        @if (selectedHamper.Images.Any())
+                        {
+                            <img src="@selectedHamper.Images.First(i => i.IsPrimary).ImageUrl" alt="@selectedHamper.Name" class="summary-product-img" />
+                        }
+                        <div class="summary-product-details">
+                            <span class="summary-product-name">@selectedHamper.Name</span>
+                            <span class="summary-product-price">₹@selectedHamper.BasePrice.ToString("F0")</span>
+                        </div>
+                    </div>
+                    
+                    @if (selectedHamper.Items.Any())
+                    {
+                        <h4 class="summary-list-title">What's Inside (Standard):</h4>
+                        <ul class="summary-items-list">
+                            @foreach (var item in selectedHamper.Items)
+                            {
+                                <li>
+                                    <i class="bi bi-check2-circle"></i>
+                                    <span>@item.Name</span>
+                                </li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <p class="small text-muted mb-4">This hamper template does not contain default items. Feel free to list items in the message box.</p>
+                    }
+                    
+                    <div class="alert alert-light border p-3 small mb-0" style="background-color: var(--bg-cream);">
+                        <i class="bi bi-patch-check-fill text-success me-1"></i> You will be able to customize this selection with our design agent.
+                    </div>
+                }
+            </aside>
+        </div>
+    }
+</div>
+
+@code {
+    [SupplyParameterFromQuery] public int? hamperId { get; set; }
+
+    private InquiryFormModel model = new();
+    private List<City> cities = new();
+    private List<Hamper> hampers = new();
+    private Hamper? selectedHamper;
+    private bool isSubmitting;
+    private bool isSubmitted;
+    private string submittedInquiryId = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        cities = await HamperRepo.GetCitiesAsync();
+        hampers = await HamperRepo.GetAllAsync();
+
+        if (hamperId.HasValue)
+        {
+            model.HamperId = hamperId.Value;
+            await LoadSelectedHamperDetails();
+        }
+    }
+
+    private async Task OnHamperChanged(int? newHamperId)
+    {
+        model.HamperId = newHamperId;
+        await LoadSelectedHamperDetails();
+    }
+
+    private async Task LoadSelectedHamperDetails()
+    {
+        if (model.HamperId.HasValue)
+        {
+            selectedHamper = await HamperRepo.GetByIdAsync(model.HamperId.Value);
+        }
+        else
+        {
+            selectedHamper = null;
+        }
+    }
+
+    private async Task HandleSubmitAsync()
+    {
+        isSubmitting = true;
+        submittedInquiryId = await InquiryService.SubmitAsync(model);
+        isSubmitting = false;
+        isSubmitted = true;
+    }
+
+    private void ResetForm()
+    {
+        model = new InquiryFormModel();
+        selectedHamper = null;
+        isSubmitted = false;
+        submittedInquiryId = string.Empty;
+    }
+}

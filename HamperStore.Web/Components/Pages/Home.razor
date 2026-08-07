@@ -1,0 +1,160 @@
+@page "/"
+@using HamperStore.Core.Entities
+@using HamperStore.Core.Interfaces
+@inject IHamperRepository HamperRepo
+
+<PageTitle>The Hamperly Gifts - Exquisite Gift Hampers & Return Favours</PageTitle>
+
+<div class="hero-section">
+    <div class="container-custom">
+        <div class="hero-content">
+            <span class="hero-subtitle">Curated with love, packed with joy</span>
+            <h1 class="hero-title">Exquisite Gift Hampers for Every Occasion</h1>
+            <p class="hero-desc">Explore our curated collections of festive hampers, Rakhi combos, birthday return favours, and custom gifting solutions designed to impress your loved ones.</p>
+            <div class="hero-buttons">
+                <a href="hampers" class="btn-luxury-primary">
+                    <i class="bi bi-grid-fill"></i> Browse Catalogue
+                </a>
+                <a href="inquire" class="btn-luxury-secondary">
+                    Custom Packaging
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container-custom">
+    <!-- Occasions Showcase -->
+    <div class="section-title">
+        <h2>Celebrate Every Occasion</h2>
+        <p>Choose from our bespoke hamper ranges tailored for specific celebrations</p>
+    </div>
+    
+    <div class="occasions-grid">
+        @if (categories == null || !categories.Any())
+        {
+            <p class="text-center"><em>Loading categories...</em></p>
+        }
+        else
+        {
+            @foreach (var cat in categories)
+            {
+                var bgImage = GetCategoryImage(cat.Slug);
+                var inlineStyle = cat.Slug == "custom-hampers" || (!cat.Slug.Contains("festival") && !cat.Slug.Contains("rakhi") && !cat.Slug.Contains("birthday")) 
+                    ? "filter: hue-rotate(140deg) saturate(0.8);" 
+                    : "";
+                
+                <div class="occasion-card">
+                    <img src="@bgImage" alt="@cat.Name" class="occasion-card-bg" style="@inlineStyle" />
+                    <div class="occasion-card-overlay">
+                        <h3>@cat.Name</h3>
+                        <p>@cat.Description</p>
+                        <a href="hampers?categoryId=@cat.Id" class="occasion-card-link">Explore <i class="bi bi-arrow-right"></i></a>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+
+    <!-- Featured Hampers Section -->
+    <div class="section-title">
+        <h2>Featured Curations</h2>
+        <p>Some of our most loved gifting bundles, handcrafted and ready for delivery</p>
+    </div>
+    
+    @if (featuredHampers == null)
+    {
+        <p class="text-center"><em>Loading featured hampers...</em></p>
+    }
+    else
+    {
+        <div class="hamper-grid mb-5">
+            @foreach (var hamper in featuredHampers)
+            {
+                <div class="hamper-card">
+                    <div class="hamper-card-img-wrapper">
+                        @if (hamper.Images.Any())
+                        {
+                            <img src="@hamper.Images.First(i => i.IsPrimary).ImageUrl" alt="@hamper.Name" class="hamper-card-img" />
+                        }
+                        @if (hamper.IsCustomizable)
+                        {
+                            <span class="hamper-tag-badge">Customizable</span>
+                        }
+                    </div>
+                    <div class="hamper-card-content">
+                        <span class="hamper-card-category">@hamper.Category.Name</span>
+                        <h3 class="hamper-card-title">@hamper.Name</h3>
+                        <p class="hamper-card-price">Starting from <strong>₹@hamper.BasePrice.ToString("F0")</strong></p>
+                        
+                        <div class="hamper-card-actions">
+                            <a href="hampers/@hamper.Slug" class="btn-card-secondary">Details</a>
+                            <a href="inquire?hamperId=@hamper.Id" class="btn-card-primary">Enquire</a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+
+    <!-- Features Showcase -->
+    <div class="section-title mt-5">
+        <h2>Why Choose The Hamperly Gifts</h2>
+        <p>Premium standards that make your gift truly unique</p>
+    </div>
+    
+    <div class="features-grid">
+        <div class="feature-box">
+            <div class="feature-icon-wrapper">
+                <i class="bi bi-gem"></i>
+            </div>
+            <h3>Premium Aesthetics</h3>
+            <p>Every gift box, ribbon, and packaging wrap is chosen for absolute premium presentation.</p>
+        </div>
+        <div class="feature-box">
+            <div class="feature-icon-wrapper">
+                <i class="bi bi-sliders"></i>
+            </div>
+            <h3>Full Customization</h3>
+            <p>Alter items, change theme colors, print customized greeting cards, and fit inside any budget.</p>
+        </div>
+        <div class="feature-box">
+            <div class="feature-icon-wrapper">
+                <i class="bi bi-truck"></i>
+            </div>
+            <h3>Direct Delivery</h3>
+            <p>Reliable door-step deliveries across Pune, Jaipur, and Kota. Handled with absolute care.</p>
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<Hamper> featuredHampers = new();
+    private List<Category> categories = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        categories = await HamperRepo.GetCategoriesAsync();
+        var all = await HamperRepo.GetAllAsync();
+        // Take a few key hampers to display
+        featuredHampers = all
+            .Where(h => h.Slug == "tumbler-hamper" || h.Slug == "diwali-deluxe-box" || h.Slug == "teddy-lollipop-bag" || h.Slug == "smile-hamper")
+            .Take(4)
+            .ToList();
+            
+        if (!featuredHampers.Any())
+        {
+            featuredHampers = all.Take(4).ToList();
+        }
+    }
+
+    private string GetCategoryImage(string slug)
+    {
+        if (slug == null) return "/images/hampers/Full_Collage.png";
+        var lower = slug.ToLower();
+        if (lower.Contains("festival")) return "/images/hampers/Full_Collage.png";
+        if (lower.Contains("rakhi")) return "/images/hampers/Rakhi.png";
+        if (lower.Contains("birthday")) return "/images/hampers/Birthday.png";
+        return "/images/hampers/Full_Collage.png"; // default fallback
+    }
+}

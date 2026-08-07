@@ -1,0 +1,288 @@
+@page "/my-inquiries"
+@using HamperStore.Core.Entities
+@using HamperStore.Core.Interfaces
+@inject HamperStore.Web.Services.UserSessionService UserSession
+@inject IInquiryRepository InquiryRepo
+@inject NavigationManager Navigation
+
+<PageTitle>Track Your Inquiries - The Hamperly Gifts</PageTitle>
+
+<div class="container-custom py-5">
+    @if (string.IsNullOrEmpty(UserSession.CurrentUserPhone))
+    {
+        <!-- Phone Number Lookup Form -->
+        <div class="inquiry-card" style="width: 100%; max-width: 500px; margin: 0 auto; box-shadow: var(--shadow-lg);">
+            <div class="text-center mb-4">
+                <div class="success-icon-wrapper" style="background-color: rgba(197, 168, 128, 0.1); color: var(--accent-dark); width: 70px; height: 70px; font-size: 2rem; margin-bottom: 1.5rem;">
+                    <i class="bi bi-patch-question-fill"></i>
+                </div>
+                <h2 class="mb-1" style="font-size: 1.8rem;">Track Your Inquiries</h2>
+                <p class="text-muted small">Enter the phone number used during inquiry submission to see your request status and timeline.</p>
+            </div>
+
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <div class="alert alert-warning small p-2" role="alert">
+                    <i class="bi bi-exclamation-circle-fill me-2"></i> @errorMessage
+                </div>
+            }
+
+            <EditForm Model="lookupModel" OnSubmit="HandleLookup" FormName="customer-lookup-form">
+                <div class="form-group-custom mb-4">
+                    <label for="searchPhone">Phone Number</label>
+                    <div class="search-input-wrapper">
+                        <i class="bi bi-telephone-fill"></i>
+                        <InputText id="searchPhone" class="search-control" style="padding-left: 2.5rem;" 
+                                   placeholder="e.g. 9876543210" @bind-Value="lookupModel.Phone" />
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-form-submit w-100" style="margin-top: 0;" disabled="@isSearching">
+                    @if (isSearching)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        <span>Searching Requests...</span>
+                    }
+                    else
+                    {
+                        <i class="bi bi-search"></i>
+                        <span>Track My Inquiries</span>
+                    }
+                </button>
+            </EditForm>
+        </div>
+    }
+    else
+    {
+        <!-- User Inquiries History -->
+        <div class="d-flex justify-content-between align-items-center mb-5">
+            <div>
+                <h1 style="font-size: 2.2rem; margin-bottom: 0.25rem;">Your Gifting Requests</h1>
+                <p class="text-muted mb-0"><i class="bi bi-person-circle"></i> Logged in as: <strong>@UserSession.CurrentCustomerName</strong> (@UserSession.CurrentUserPhone)</p>
+            </div>
+            <button @onclick="LogoutCustomer" class="btn-card-secondary" style="width: auto; padding: 0.6rem 1.2rem;">
+                <i class="bi bi-box-arrow-right"></i> Check Another Number
+            </button>
+        </div>
+
+        @if (userInquiries == null)
+        {
+            <div class="text-center py-5">
+                <div class="spinner-border text-success" role="status">
+                    <span class="visually-hidden">Loading your inquiries...</span>
+                </div>
+            </div>
+        }
+        else if (!userInquiries.Any())
+        {
+            <div class="inquiry-card text-center py-5">
+                <i class="bi bi-file-earmark-text" style="font-size: 3rem; color: var(--accent); display: block; margin-bottom: 1rem;"></i>
+                <h3>No active inquiries found</h3>
+                <p class="text-muted">You don't have any bookings logged for this phone number yet.</p>
+                <a href="inquire" class="btn-luxury-primary mt-3">Create an Inquiry Now</a>
+            </div>
+        }
+        else
+        {
+            <div class="d-flex flex-column gap-5">
+                @foreach (var inquiry in userInquiries)
+                {
+                    <div class="inquiry-card" style="box-shadow: var(--shadow-md); border: 1px solid var(--border-color);">
+                        <!-- Inquiry Header -->
+                        <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-4 flex-wrap gap-2">
+                            <div>
+                                <span class="badge text-uppercase" style="background-color: var(--primary-light); color: white; padding: 0.4rem 0.8rem; font-size: 0.8rem;">Ref @inquiry.ReferenceId</span>
+                                <span class="text-muted small ms-3"><i class="bi bi-calendar3"></i> Submitted: @inquiry.CreatedAt.ToLocalTime().ToString("dd MMM yyyy, hh:mm tt")</span>
+                            </div>
+                            <div>
+                                <span class="status-badge @GetStatusBadgeClass(inquiry.Status)">
+                                    Current Status: @inquiry.Status.ToString()
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Info details row -->
+                        <div class="row mb-4">
+                            <div class="col-md-4 mb-3">
+                                <h5 class="small text-muted text-uppercase mb-2" style="font-weight: 700;">Hamper Base</h5>
+                                <p class="mb-1"><strong>@(inquiry.Hamper != null ? inquiry.Hamper.Name : "Custom Curation")</strong></p>
+                                @if (inquiry.Hamper != null)
+                                {
+                                    <p class="small text-muted mb-0">Base Price: ₹@inquiry.Hamper.BasePrice.ToString("F0")</p>
+                                }
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <h5 class="small text-muted text-uppercase mb-2" style="font-weight: 700;">Target Event & City</h5>
+                                <p class="mb-1"><i class="bi bi-balloon-fill text-accent-dark"></i> Occasion: @(string.IsNullOrEmpty(inquiry.Occasion) ? "Custom Event" : inquiry.Occasion)</p>
+                                <p class="small text-muted mb-0"><i class="bi bi-geo-alt-fill text-muted"></i> Destination: @inquiry.City.Name</p>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <h5 class="small text-muted text-uppercase mb-2" style="font-weight: 700;">Financials & Notes</h5>
+                                <p class="mb-1">Budget: <strong>@(inquiry.Budget.HasValue ? $"₹{inquiry.Budget.Value.ToString("F0")}" : "Flexible")</strong></p>
+                                @if (!string.IsNullOrEmpty(inquiry.Message))
+                                {
+                                    <p class="small text-muted mb-0 text-truncate" style="max-width: 250px;" title="@inquiry.Message">Notes: "@inquiry.Message"</p>
+                                }
+                            </div>
+                        </div>
+
+                        <!-- Visual Custom Timeline -->
+                        <div class="timeline-wrapper py-4 border-top">
+                            <h5 class="small text-muted text-uppercase mb-4" style="font-weight: 700; letter-spacing: 0.5px;">Tracking Status Timeline</h5>
+                            
+                            <div class="d-flex justify-content-between align-items-center position-relative flex-wrap gap-4" style="z-index: 1;">
+                                <!-- Background Line -->
+                                <div class="position-absolute d-none d-md-block" style="top: 25px; left: 10%; right: 10%; height: 3px; background-color: var(--border-color); z-index: -1;">
+                                    <div style="height: 100%; width: @GetTimelineProgressPercent(inquiry.Status)%; background-color: var(--primary); transition: width 0.8s ease-in-out;"></div>
+                                </div>
+
+                                <!-- Step 1: New -->
+                                <div class="text-center d-flex flex-column align-items-center" style="flex: 1; min-width: 100px;">
+                                    <div class="d-flex align-items-center justify-content-center rounded-circle" 
+                                         style="width: 50px; height: 50px; border: 2px solid @(IsStepActive(inquiry.Status, 1) ? "var(--primary)" : "var(--border-color)"); background-color: @(IsStepActive(inquiry.Status, 1) ? "var(--primary)" : "white"); color: @(IsStepActive(inquiry.Status, 1) ? "white" : "var(--text-muted)"); transition: all 0.3s;">
+                                        <i class="bi bi-file-earmark-check-fill" style="font-size: 1.25rem;"></i>
+                                    </div>
+                                    <span class="small mt-2" style="font-weight: @(IsStepActive(inquiry.Status, 1) ? "700" : "500"); color: @(IsStepActive(inquiry.Status, 1) ? "var(--primary-dark)" : "var(--text-muted)")">Inquiry Received</span>
+                                    <span class="x-small text-muted d-none d-md-block">Awaiting Review</span>
+                                </div>
+
+                                <!-- Step 2: Contacted -->
+                                <div class="text-center d-flex flex-column align-items-center" style="flex: 1; min-width: 100px;">
+                                    <div class="d-flex align-items-center justify-content-center rounded-circle" 
+                                         style="width: 50px; height: 50px; border: 2px solid @(IsStepActive(inquiry.Status, 2) ? "var(--primary)" : "var(--border-color)"); background-color: @(IsStepActive(inquiry.Status, 2) ? "var(--primary)" : "white"); color: @(IsStepActive(inquiry.Status, 2) ? "white" : "var(--text-muted)"); transition: all 0.3s;">
+                                        <i class="bi bi-chat-heart-fill" style="font-size: 1.25rem;"></i>
+                                    </div>
+                                    <span class="small mt-2" style="font-weight: @(IsStepActive(inquiry.Status, 2) ? "700" : "500"); color: @(IsStepActive(inquiry.Status, 2) ? "var(--primary-dark)" : "var(--text-muted)")">In Conversation</span>
+                                    <span class="x-small text-muted d-none d-md-block">Customizing Hamper</span>
+                                </div>
+
+                                <!-- Step 3: Converted -->
+                                <div class="text-center d-flex flex-column align-items-center" style="flex: 1; min-width: 100px;">
+                                    <div class="d-flex align-items-center justify-content-center rounded-circle" 
+                                         style="width: 50px; height: 50px; border: 2px solid @(IsStepActive(inquiry.Status, 3) ? "var(--primary)" : "var(--border-color)"); background-color: @(IsStepActive(inquiry.Status, 3) ? "var(--primary)" : "white"); color: @(IsStepActive(inquiry.Status, 3) ? "white" : "var(--text-muted)"); transition: all 0.3s;">
+                                        <i class="bi bi-gift-fill" style="font-size: 1.25rem;"></i>
+                                    </div>
+                                    <span class="small mt-2" style="font-weight: @(IsStepActive(inquiry.Status, 3) ? "700" : "500"); color: @(IsStepActive(inquiry.Status, 3) ? "var(--primary-dark)" : "var(--text-muted)")">Order Confirmed</span>
+                                    <span class="x-small text-muted d-none d-md-block">Package locked & Seeding</span>
+                                </div>
+
+                                <!-- Step 4: Closed -->
+                                <div class="text-center d-flex flex-column align-items-center" style="flex: 1; min-width: 100px;">
+                                    <div class="d-flex align-items-center justify-content-center rounded-circle" 
+                                         style="width: 50px; height: 50px; border: 2px solid @(IsStepActive(inquiry.Status, 4) ? "var(--primary)" : "var(--border-color)"); background-color: @(IsStepActive(inquiry.Status, 4) ? "var(--primary)" : "white"); color: @(IsStepActive(inquiry.Status, 4) ? "white" : "var(--text-muted)"); transition: all 0.3s;">
+                                        <i class="bi bi-check-all" style="font-size: 1.5rem;"></i>
+                                    </div>
+                                    <span class="small mt-2" style="font-weight: @(IsStepActive(inquiry.Status, 4) ? "700" : "500"); color: @(IsStepActive(inquiry.Status, 4) ? "var(--primary-dark)" : "var(--text-muted)")">Completed</span>
+                                    <span class="x-small text-muted d-none d-md-block">Inquiry closed / Delivered</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    }
+</div>
+
+@code {
+    private CustomerLookupModel lookupModel = new();
+    private bool isSearching;
+    private string? errorMessage;
+    private List<Inquiry> userInquiries = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await UserSession.InitializeAsync();
+        if (!string.IsNullOrEmpty(UserSession.CurrentUserPhone))
+        {
+            await LoadCustomerInquiriesAsync();
+        }
+    }
+
+    private async Task HandleLookup()
+    {
+        errorMessage = null;
+        Console.WriteLine($"[DEBUG] CustomerLookup HandleLookup called. Phone: {lookupModel.Phone}");
+
+        if (string.IsNullOrWhiteSpace(lookupModel.Phone))
+        {
+            errorMessage = "Please enter a valid phone number.";
+            return;
+        }
+
+        isSearching = true;
+        var inquiries = await InquiryRepo.GetByCustomerPhoneAsync(lookupModel.Phone);
+        isSearching = false;
+
+        if (inquiries == null || !inquiries.Any())
+        {
+            Console.WriteLine($"[DEBUG] CustomerLookup failed. No inquiries found for phone: {lookupModel.Phone}");
+            errorMessage = "No inquiries found for this phone number. Please check the digits or submit an inquiry first.";
+            return;
+        }
+
+        // Login as customer using their name from database
+        var customerName = inquiries.First().Customer.Name;
+        await UserSession.LoginAsCustomerAsync(lookupModel.Phone, customerName);
+        Console.WriteLine($"[DEBUG] CustomerLookup success. Logged in as Gaurav / {customerName}.");
+        userInquiries = inquiries;
+    }
+
+    private async Task LoadCustomerInquiriesAsync()
+    {
+        if (!string.IsNullOrEmpty(UserSession.CurrentUserPhone))
+        {
+            userInquiries = await InquiryRepo.GetByCustomerPhoneAsync(UserSession.CurrentUserPhone);
+        }
+    }
+
+    private async Task LogoutCustomer()
+    {
+        await UserSession.LogoutAsync();
+        userInquiries = new List<Inquiry>();
+        lookupModel.Phone = string.Empty;
+    }
+
+    private string GetStatusBadgeClass(InquiryStatus status)
+    {
+        return status switch
+        {
+            InquiryStatus.New => "status-badge-new",
+            InquiryStatus.Contacted => "status-badge-contacted",
+            InquiryStatus.Converted => "status-badge-converted",
+            InquiryStatus.Closed => "status-badge-closed",
+            _ => ""
+        };
+    }
+
+    private int GetTimelineProgressPercent(InquiryStatus status)
+    {
+        return status switch
+        {
+            InquiryStatus.New => 0,
+            InquiryStatus.Contacted => 33,
+            InquiryStatus.Converted => 66,
+            InquiryStatus.Closed => 100,
+            _ => 0
+        };
+    }
+
+    private bool IsStepActive(InquiryStatus currentStatus, int step)
+    {
+        int currentStepVal = currentStatus switch
+        {
+            InquiryStatus.New => 1,
+            InquiryStatus.Contacted => 2,
+            InquiryStatus.Converted => 3,
+            InquiryStatus.Closed => 4,
+            _ => 1
+        };
+
+        return currentStepVal >= step;
+    }
+
+    public class CustomerLookupModel
+    {
+        public string Phone { get; set; } = string.Empty;
+    }
+}

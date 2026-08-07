@@ -1,0 +1,142 @@
+@page "/hampers/{Slug}"
+@using HamperStore.Core.Entities
+@using HamperStore.Core.Interfaces
+@inject IHamperRepository HamperRepo
+@rendermode InteractiveServer
+
+<PageTitle>@(hamper?.Name ?? "Hamper Detail") - The Hamperly Gifts</PageTitle>
+
+<div class="container-custom py-5">
+    @if (hamper == null)
+    {
+        <div class="text-center py-5">
+            <div class="spinner-border text-success" role="status">
+                <span class="visually-hidden">Loading hamper details...</span>
+            </div>
+        </div>
+    }
+    else
+    {
+        <!-- Breadcrumbs -->
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb" style="background: transparent; padding: 0;">
+                <li class="breadcrumb-item"><a href="">Home</a></li>
+                <li class="breadcrumb-item"><a href="hampers">Catalogue</a></li>
+                <li class="breadcrumb-item"><a href="hampers?categoryId=@hamper.CategoryId">@hamper.Category.Name</a></li>
+                <li class="breadcrumb-item active" aria-current="page" style="color: var(--accent-dark);">@hamper.Name</li>
+            </ol>
+        </nav>
+
+        <div class="detail-grid">
+            <!-- Left Side: Images -->
+            <div class="detail-images-section">
+                <div class="detail-img-container">
+                    @if (hamper.Images.Any())
+                    {
+                        <img src="@hamper.Images.First(i => i.IsPrimary).ImageUrl" alt="@hamper.Name" class="detail-img" />
+                    }
+                    else
+                    {
+                        <div class="text-muted"><i class="bi bi-image" style="font-size: 4rem;"></i></div>
+                    }
+                </div>
+            </div>
+
+            <!-- Right Side: Product Information -->
+            <div class="detail-info">
+                <span class="detail-category">@hamper.Category.Name</span>
+                <h1 class="detail-title">@hamper.Name</h1>
+                
+                <div class="detail-price">
+                    ₹@hamper.BasePrice.ToString("F0")
+                </div>
+
+                <h3 class="detail-desc-title">Description</h3>
+                <p class="detail-desc">@hamper.Description</p>
+
+                <!-- City & Delivery Features Box -->
+                <h3 class="detail-desc-title">Availability & Delivery</h3>
+                <div class="detail-features">
+                    <div class="detail-feature-item">
+                        <i class="bi bi-geo-alt-fill"></i>
+                        <div>
+                            <strong>Available in:</strong><br />
+                            <span>@string.Join(", ", hamper.AvailableCities.Select(c => c.Name))</span>
+                        </div>
+                    </div>
+                    <div class="detail-feature-item">
+                        <i class="bi bi-truck"></i>
+                        <div>
+                            <strong>Delivery Fee:</strong><br />
+                            <span>From ₹0 to ₹99 (varies by city)</span>
+                        </div>
+                    </div>
+                    <div class="detail-feature-item">
+                        <i class="bi bi-clock-history"></i>
+                        <div>
+                            <strong>Dispatch:</strong><br />
+                            <span>1 to 3 business days</span>
+                        </div>
+                    </div>
+                    <div class="detail-feature-item">
+                        <i class="bi bi-shield-check"></i>
+                        <div>
+                            <strong>Quality Check:</strong><br />
+                            <span>Sanitized, bubble wrapped</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Customization Note if applicable -->
+                @if (hamper.IsCustomizable)
+                {
+                    <div class="alert alert-warning d-flex align-items-center" role="alert" style="background-color: rgba(197, 168, 128, 0.1); border-color: var(--accent-light); color: var(--primary-dark);">
+                        <i class="bi bi-info-circle-fill me-3" style="font-size: 1.5rem; color: var(--accent-dark);"></i>
+                        <div>
+                            <strong>Bespoke Customization Available:</strong> You can add or swap items, select custom wrapping colors, or adjust this hamper to fit your specific budget on the inquiry form!
+                        </div>
+                    </div>
+                }
+
+                <a href="/inquire?hamperId=@hamper.Id" class="btn-detail-inquire mt-3">
+                    <i class="bi bi-chat-heart-fill"></i> Enquire About This Hamper
+                </a>
+            </div>
+        </div>
+
+        <!-- What's Inside section -->
+        @if (hamper.Items.Any())
+        {
+            <div class="inside-box-section mt-5">
+                <h2 class="inside-box-title">
+                    <i class="bi bi-box-seam-fill"></i> What's Inside This Hamper
+                </h2>
+                <div class="inside-box-grid">
+                    @foreach (var item in hamper.Items)
+                    {
+                        <div class="inside-box-item">
+                            <i class="bi bi-gift-fill"></i>
+                            <div>
+                                @item.Name
+                                @if (item.Price > 0)
+                                {
+                                    <span style="color: var(--accent-dark); font-weight: 600;"> (+₹@item.Price.ToString("F0"))</span>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    }
+</div>
+
+@code {
+    [Parameter] public string Slug { get; set; } = string.Empty;
+    private Hamper? hamper;
+
+    protected override async Task OnInitializedAsync()
+    {
+        hamper = await HamperRepo.GetBySlugAsync(Slug);
+    }
+}

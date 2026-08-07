@@ -1,0 +1,157 @@
+@page "/hampers"
+@using HamperStore.Core.Entities
+@using HamperStore.Core.Interfaces
+@inject IHamperRepository HamperRepo
+@rendermode InteractiveServer
+
+<PageTitle>Our Gift Hampers - The Hamperly Gifts</PageTitle>
+
+<div class="container-custom py-5">
+    <div class="section-title">
+        <h2>Explore Our Curated Hampers</h2>
+        <p>Handpicked bundles of joy and bespoke favour boxes, filtered for your convenience</p>
+    </div>
+
+    <div class="catalogue-container">
+        <!-- Sidebar Filter Panel -->
+        <aside class="filter-sidebar">
+            <div class="filter-section">
+                <h3 class="filter-title">Search</h3>
+                <div class="search-input-wrapper">
+                    <i class="bi bi-search"></i>
+                    <input type="text" class="search-control" placeholder="Search by name..." 
+                           @bind="searchTerm" @bind:event="oninput" @onkeyup="LoadHampers" />
+                </div>
+            </div>
+
+            <div class="filter-section">
+                <h3 class="filter-title">Select City</h3>
+                <select class="city-select-control" @bind="selectedCityId" @bind:after="LoadHampers">
+                    <option value="">All Cities (Pune, Jaipur, Kota)</option>
+                    @foreach (var city in cities)
+                    {
+                        <option value="@city.Id">@city.Name</option>
+                    }
+                </select>
+            </div>
+
+            <div class="filter-section">
+                <h3 class="filter-title">Occasions</h3>
+                <div class="category-chips-list">
+                    <button class="category-chip @(selectedCategoryId == null ? "active" : "")" 
+                            @onclick="() => SelectCategory(null)">
+                        <span>All Occasions</span>
+                        <i class="bi bi-chevron-right"></i>
+                    </button>
+                    @foreach (var cat in categories)
+                    {
+                        <button class="category-chip @(selectedCategoryId == cat.Id ? "active" : "")" 
+                                @onclick="() => SelectCategory(cat.Id)">
+                            <span>@cat.Name</span>
+                            <i class="bi bi-chevron-right"></i>
+                        </button>
+                    }
+                </div>
+            </div>
+        </aside>
+
+        <!-- Product Grid Area -->
+        <main class="catalogue-products">
+            @if (hampers == null)
+            {
+                <div class="text-center py-5">
+                    <div class="spinner-border text-success" role="status">
+                        <span class="visually-hidden">Loading hampers...</span>
+                    </div>
+                </div>
+            }
+            else if (!hampers.Any())
+            {
+                <div class="text-center py-5">
+                    <i class="bi bi-search-heart" style="font-size: 3rem; color: var(--accent);"></i>
+                    <h3 class="mt-3">No Hampers Found</h3>
+                    <p class="text-muted">Try adjusting your filters or search terms.</p>
+                </div>
+            }
+            else
+            {
+                <div class="hamper-grid">
+                    @foreach (var hamper in hampers)
+                    {
+                        <div class="hamper-card">
+                            <div class="hamper-card-img-wrapper">
+                                @if (hamper.Images.Any())
+                                {
+                                    <img src="@hamper.Images.First(i => i.IsPrimary).ImageUrl" alt="@hamper.Name" class="hamper-card-img" />
+                                }
+                                @if (hamper.IsCustomizable)
+                                {
+                                    <span class="hamper-tag-badge">Customizable</span>
+                                }
+                            </div>
+                            <div class="hamper-card-content">
+                                <span class="hamper-card-category">@hamper.Category.Name</span>
+                                <h3 class="hamper-card-title">@hamper.Name</h3>
+                                <p class="hamper-card-price">₹@hamper.BasePrice.ToString("F0")</p>
+                                
+                                <div class="hamper-card-actions">
+                                    <a href="/hampers/@hamper.Slug" class="btn-card-secondary">Details</a>
+                                    <a href="/inquire?hamperId=@hamper.Id" class="btn-card-primary">Enquire</a>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </main>
+    </div>
+</div>
+
+@code {
+    [SupplyParameterFromQuery] public int? categoryId { get; set; }
+
+    private List<Hamper> hampers = new();
+    private List<Category> categories = new();
+    private List<City> cities = new();
+    private int? selectedCityId;
+    private int? selectedCategoryId;
+    private string searchTerm = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        categories = await HamperRepo.GetCategoriesAsync();
+        cities = await HamperRepo.GetCitiesAsync();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (categoryId.HasValue)
+        {
+            selectedCategoryId = categoryId.Value;
+        }
+        await LoadHampers();
+    }
+
+    private async Task SelectCategory(int? id)
+    {
+        selectedCategoryId = id;
+        categoryId = id; // Sync with parameter
+        await LoadHampers();
+    }
+
+    private async Task LoadHampers()
+    {
+        var all = await HamperRepo.GetAllAsync(selectedCityId, selectedCategoryId);
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            hampers = all
+                .Where(h => h.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) || 
+                            (h.Description != null && h.Description.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)))
+                .ToList();
+        }
+        else
+        {
+            hampers = all;
+        }
+    }
+}

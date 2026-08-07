@@ -1,0 +1,7 @@
+// Add to Program.cs BEFORE builder.Build():
+
+using HamperStore.Core.Interfaces;
+using HamperStore.Infrastructure.Repositories;
+
+builder.Services.AddScoped<IHamperRepository, HamperRepository>();
+builder.Services.AddScoped<IInquiryRepository, InquiryRepository>();

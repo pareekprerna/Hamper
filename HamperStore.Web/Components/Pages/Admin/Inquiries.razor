@@ -1,0 +1,449 @@
+@page "/admin/inquiries"
+@using HamperStore.Core.Entities
+@using HamperStore.Core.Interfaces
+@inject HamperStore.Web.Services.UserSessionService UserSession
+@inject NavigationManager Navigation
+@inject IInquiryRepository InquiryRepo
+@inject IEmailService EmailService
+
+<PageTitle>Inquiries Dashboard - Admin</PageTitle>
+
+<div class="container-custom py-5">
+    @if (!UserSession.IsAdmin)
+    {
+        <div class="text-center py-5">
+            <div class="spinner-border text-success" role="status">
+                <span class="visually-hidden">Redirecting...</span>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="mb-1" style="font-size: 2.2rem;">Customer Inquiries</h1>
+                <p class="text-muted mb-0">Track and manage booking inquiries and hamper customizations</p>
+            </div>
+            <button @onclick="LoadInquiriesAsync" class="btn-card-secondary" style="width: auto; padding: 0.6rem 1.2rem;">
+                <i class="bi bi-arrow-clockwise"></i> Refresh Data
+            </button>
+        </div>
+
+        <!-- Metrics Cards -->
+        <div class="admin-metrics-row">
+            <div class="metric-card">
+                <div class="metric-details">
+                    <h3>Total Inquiries</h3>
+                    <div class="metric-value" id="metric-total">@totalInquiries</div>
+                </div>
+                <div class="metric-icon-wrapper">
+                    <i class="bi bi-chat-square-text-fill"></i>
+                </div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-details">
+                    <h3>New Inquiries</h3>
+                    <div class="metric-value text-warning" id="metric-new">@newInquiries</div>
+                </div>
+                <div class="metric-icon-wrapper" style="background-color: rgba(197, 168, 128, 0.15); color: var(--accent-dark);">
+                    <i class="bi bi-bell-fill"></i>
+                </div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-details">
+                    <h3>Converted Orders</h3>
+                    <div class="metric-value text-success" id="metric-converted">@convertedInquiries</div>
+                </div>
+                <div class="metric-icon-wrapper" style="background-color: rgba(38, 176, 80, 0.1); color: #26b050;">
+                    <i class="bi bi-bag-check-fill"></i>
+                </div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-details">
+                    <h3>Conversion Rate</h3>
+                    <div class="metric-value" id="metric-rate">@conversionRate.ToString("F0")%</div>
+                </div>
+                <div class="metric-icon-wrapper" style="background-color: rgba(37, 140, 251, 0.1); color: #1b6ec2;">
+                    <i class="bi bi-graph-up-arrow"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Table Card -->
+        <div class="admin-table-card">
+            <div class="admin-table-header">
+                <h2>All Inquiries</h2>
+                <div class="d-flex gap-3 align-items-center">
+                    <label for="statusFilter" class="small text-muted mb-0">Filter by Status:</label>
+                    <select id="statusFilter" class="status-select" @bind="statusFilter" @bind:after="ApplyFilter">
+                        <option value="All">All Inquiries</option>
+                        <option value="New">New</option>
+                        <option value="Contacted">Contacted</option>
+                        <option value="Converted">Converted</option>
+                        <option value="Closed">Closed</option>
+                    </select>
+                </div>
+            </div>
+
+            @if (filteredInquiries == null)
+            {
+                <div class="text-center py-5">
+                    <div class="spinner-border text-success" role="status">
+                        <span class="visually-hidden">Loading inquiries...</span>
+                    </div>
+                </div>
+            }
+            else if (!filteredInquiries.Any())
+            {
+                <div class="text-center py-5 text-muted">
+                    <i class="bi bi-inbox" style="font-size: 3rem; display: block; margin-bottom: 1rem; color: var(--accent);"></i>
+                    <p>No inquiries found matching this filter.</p>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table-custom">
+                        <thead>
+                            <tr>
+                                <th>Ref ID</th>
+                                <th>Date</th>
+                                <th>Customer</th>
+                                <th>City</th>
+                                <th>Hamper Base</th>
+                                <th>Occasion</th>
+                                <th>Budget</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var inquiry in filteredInquiries)
+                            {
+                                <tr id="inquiry-row-@inquiry.Id">
+                                    <td><strong>@inquiry.ReferenceId</strong></td>
+                                    <td>@inquiry.CreatedAt.ToLocalTime().ToString("dd MMM yyyy, hh:mm tt")</td>
+                                    <td>
+                                        <strong>@inquiry.Customer.Name</strong><br />
+                                        <span class="small text-muted"><i class="bi bi-phone"></i> @inquiry.Customer.Phone</span><br />
+                                        @if (!string.IsNullOrEmpty(inquiry.Customer.Email))
+                                        {
+                                            <span class="small text-muted"><i class="bi bi-envelope"></i> @inquiry.Customer.Email</span>
+                                        }
+                                    </td>
+                                    <td>@inquiry.City.Name</td>
+                                    <td>
+                                        @(inquiry.Hamper != null ? inquiry.Hamper.Name : "Custom Hamper")
+                                    </td>
+                                    <td>@(string.IsNullOrEmpty(inquiry.Occasion) ? "-" : inquiry.Occasion)</td>
+                                    <td>
+                                        @(inquiry.Budget.HasValue ? $"₹{inquiry.Budget.Value.ToString("F0")}" : "-")
+                                    </td>
+                                    <td>
+                                        <select class="status-select status-select-dropdown" 
+                                                value="@inquiry.Status.ToString()" 
+                                                @onchange="(e) => UpdateInquiryStatusAsync(inquiry.Id, e.Value?.ToString())">
+                                            @foreach (var status in Enum.GetValues<InquiryStatus>())
+                                            {
+                                                <option value="@status.ToString()">@status.ToString()</option>
+                                            }
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <button @onclick="() => ViewInquiryDetails(inquiry)" class="btn-card-secondary btn-view-details" style="width: auto; padding: 0.4rem 0.8rem;">
+                                            <i class="bi bi-eye-fill"></i> Respond
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<!-- Modal View Details & Communication tools -->
+@if (selectedInquiry != null)
+{
+    <div class="modal-backdrop-custom" @onclick="CloseModal">
+        <div class="modal-content-custom" @onclick:stopPropagation style="max-width: 650px;">
+            <div class="modal-header-custom">
+                <h3>Inquiry Reference @selectedInquiry.ReferenceId</h3>
+                <button @onclick="CloseModal" class="btn-close-custom">&times;</button>
+            </div>
+            <div class="modal-body-custom">
+                <!-- Customer info grid -->
+                <div class="row mb-3">
+                    <div class="col-md-6 modal-section">
+                        <h4>Customer Details</h4>
+                        <p><strong>Name:</strong> @selectedInquiry.Customer.Name</p>
+                        <p><strong>Phone:</strong> @selectedInquiry.Customer.Phone</p>
+                        @if (!string.IsNullOrEmpty(selectedInquiry.Customer.Email))
+                        {
+                            <p><strong>Email:</strong> @selectedInquiry.Customer.Email</p>
+                        }
+                    </div>
+                    <div class="col-md-6 modal-section">
+                        <h4>Configuration</h4>
+                        <p><strong>Occasion:</strong> @(string.IsNullOrEmpty(selectedInquiry.Occasion) ? "Not Specified" : selectedInquiry.Occasion)</p>
+                        <p><strong>Delivery City:</strong> @selectedInquiry.City.Name</p>
+                        <p><strong>Budget:</strong> @(selectedInquiry.Budget.HasValue ? $"₹{selectedInquiry.Budget.Value.ToString("F0")}" : "Flexible")</p>
+                    </div>
+                </div>
+
+                <div class="modal-section mb-3">
+                    <h4>Selected Hamper Template</h4>
+                    @if (selectedInquiry.Hamper != null)
+                    {
+                        <p><strong>Hamper Name:</strong> @selectedInquiry.Hamper.Name (Base Price: ₹@selectedInquiry.Hamper.BasePrice.ToString("F0"))</p>
+                    }
+                    else
+                    {
+                        <p><em>Fully Custom Curation (Build Your Own)</em></p>
+                    }
+                </div>
+
+                <div class="modal-section mb-3">
+                    <h4>Customer Customization Notes</h4>
+                    <p class="border p-3 rounded" style="background-color: var(--bg-cream); white-space: pre-wrap; font-style: italic; font-size: 0.95rem;">
+                        @(string.IsNullOrEmpty(selectedInquiry.Message) ? "No message or instructions provided." : selectedInquiry.Message)
+                    </p>
+                </div>
+
+                <!-- Messaging response tab panel -->
+                <div class="modal-section border-top pt-3">
+                    <h4 class="mb-3"><i class="bi bi-chat-dots-fill text-accent"></i> Send Response to Customer</h4>
+                    
+                    <div class="d-flex gap-2 mb-3">
+                        <button type="button" class="btn-card-secondary" 
+                                style="width: auto; padding: 0.5rem 1rem; border-color: @(activeTab == "whatsapp" ? "var(--accent)" : "var(--border-color)"); font-weight: @(activeTab == "whatsapp" ? "700" : "500"); background-color: @(activeTab == "whatsapp" ? "rgba(197,168,128,0.1)" : "transparent")"
+                                @onclick='() => SetActiveTab("whatsapp")'>
+                            <i class="bi bi-whatsapp"></i> WhatsApp Link
+                        </button>
+                        <button type="button" class="btn-card-secondary" 
+                                style="width: auto; padding: 0.5rem 1rem; border-color: @(activeTab == "email" ? "var(--accent)" : "var(--border-color)"); font-weight: @(activeTab == "email" ? "700" : "500"); background-color: @(activeTab == "email" ? "rgba(197,168,128,0.1)" : "transparent")"
+                                @onclick='() => SetActiveTab("email")'>
+                            <i class="bi bi-envelope"></i> Email Response
+                        </button>
+                    </div>
+
+                    @if (activeTab == "whatsapp")
+                    {
+                        <div class="p-3 border rounded mb-3" style="background-color: var(--bg-cream);">
+                            <div class="form-group-custom mb-3">
+                                <label class="small text-muted">WhatsApp Message Template</label>
+                                <textarea class="form-control-custom small" rows="3" @bind="whatsappMessage"></textarea>
+                            </div>
+                            <a href="@GetWhatsAppLink(selectedInquiry)" target="_blank" @onclick="() => RecordWhatsAppContact(selectedInquiry)"
+                               class="btn-form-submit w-100" style="margin-top: 0; background-color: #25D366; border-color: #25d366; color: white !important;">
+                                <i class="bi bi-whatsapp"></i> Open WhatsApp Web & Contact
+                            </a>
+                            <p class="small text-muted mt-2 mb-0"><i class="bi bi-info-circle"></i> Opening chat will automatically mark this inquiry as <strong>Contacted</strong>.</p>
+                        </div>
+                    }
+                    else if (activeTab == "email")
+                    {
+                        <div class="p-3 border rounded mb-3" style="background-color: var(--bg-cream);">
+                            @if (string.IsNullOrEmpty(selectedInquiry.Customer.Email))
+                            {
+                                <p class="text-danger small mb-0"><i class="bi bi-exclamation-triangle-fill"></i> Customer has not provided an email address. Response via email is disabled.</p>
+                            }
+                            else
+                            {
+                                @if (!string.IsNullOrEmpty(emailFeedbackMessage))
+                                {
+                                    <div class="alert @(emailFeedbackSuccess ? "alert-success" : "alert-warning") small p-2" role="alert">
+                                        @emailFeedbackMessage
+                                    </div>
+                                }
+                                <div class="form-grid mb-3">
+                                    <div class="form-group-custom full-width">
+                                        <label class="small text-muted">Subject</label>
+                                        <input type="text" class="form-control-custom small" @bind="emailSubject" />
+                                    </div>
+                                    <div class="form-group-custom full-width">
+                                        <label class="small text-muted">Custom Message Body (HTML supported)</label>
+                                        <textarea class="form-control-custom small" rows="4" @bind="emailBodyText"></textarea>
+                                    </div>
+                                </div>
+                                <button type="button" @onclick="() => SendEmailResponseAsync(selectedInquiry)" class="btn-form-submit w-100" style="margin-top: 0;" disabled="@emailSending">
+                                    @if (emailSending)
+                                    {
+                                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                        <span>Sending Email...</span>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-envelope-check-fill"></i>
+                                        <span>Send Email Response</span>
+                                    }
+                                </button>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+            <div class="modal-footer-custom">
+                <button @onclick="CloseModal" class="btn-accent">Close Details</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<Inquiry> allInquiries = new();
+    private List<Inquiry> filteredInquiries = new();
+    private Inquiry? selectedInquiry;
+
+    private int totalInquiries = 0;
+    private int newInquiries = 0;
+    private int convertedInquiries = 0;
+    private double conversionRate = 0;
+    private string statusFilter = "All";
+
+    // Messaging UI states
+    private string activeTab = "whatsapp";
+    private string whatsappMessage = string.Empty;
+    private string emailSubject = string.Empty;
+    private string emailBodyText = string.Empty;
+    private bool emailSending = false;
+    private string? emailFeedbackMessage;
+    private bool emailFeedbackSuccess = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await UserSession.InitializeAsync();
+        if (!UserSession.IsAdmin)
+        {
+            Navigation.NavigateTo("admin/login");
+            return;
+        }
+        await LoadInquiriesAsync();
+    }
+
+    private async Task LoadInquiriesAsync()
+    {
+        allInquiries = await InquiryRepo.GetAllAsync();
+        ApplyFilter();
+        CalculateMetrics();
+    }
+
+    private void CalculateMetrics()
+    {
+        totalInquiries = allInquiries.Count;
+        newInquiries = allInquiries.Count(i => i.Status == InquiryStatus.New);
+        convertedInquiries = allInquiries.Count(i => i.Status == InquiryStatus.Converted);
+        
+        if (totalInquiries > 0)
+        {
+            conversionRate = ((double)convertedInquiries / totalInquiries) * 100;
+        }
+        else
+        {
+            conversionRate = 0;
+        }
+    }
+
+    private void ApplyFilter()
+    {
+        if (statusFilter == "All")
+        {
+            filteredInquiries = allInquiries.ToList();
+        }
+        else
+        {
+            if (Enum.TryParse<InquiryStatus>(statusFilter, out var selectedStatus))
+            {
+                filteredInquiries = allInquiries.Where(i => i.Status == selectedStatus).ToList();
+            }
+        }
+    }
+
+    private async Task UpdateInquiryStatusAsync(int inquiryId, string? statusStr)
+    {
+        if (string.IsNullOrEmpty(statusStr)) return;
+
+        if (Enum.TryParse<InquiryStatus>(statusStr, out var newStatus))
+        {
+            await InquiryRepo.UpdateStatusAsync(inquiryId, newStatus);
+            
+            // Update local memory to avoid full roundtrip reload
+            var item = allInquiries.FirstOrDefault(i => i.Id == inquiryId);
+            if (item != null)
+            {
+                item.Status = newStatus;
+            }
+            
+            ApplyFilter();
+            CalculateMetrics();
+        }
+    }
+
+    private void ViewInquiryDetails(Inquiry inquiry)
+    {
+        selectedInquiry = inquiry;
+        activeTab = "whatsapp";
+        emailFeedbackMessage = null;
+        
+        var hamperName = inquiry.Hamper != null ? inquiry.Hamper.Name : "Custom Gift Hamper";
+        whatsappMessage = $"Hello {inquiry.Customer.Name}, thank you for inquiring about the '{hamperName}' on The Hamperly Gifts. We received your request for the occasion '{inquiry.Occasion ?? "your celebration"}'. Can we discuss your customization requirements?";
+        
+        emailSubject = $"Inquiry Response regarding your The Hamperly Gifts Request {inquiry.ReferenceId}";
+        emailBodyText = $"Dear {inquiry.Customer.Name},<br/><br/>Thank you for your interest in our <b>{hamperName}</b>.<br/><br/>We would love to help you design and customize this package for your <b>{inquiry.Occasion ?? "upcoming celebration"}</b>.<br/><br/>Your specified budget was: <b>{(inquiry.Budget.HasValue ? "₹" + inquiry.Budget.Value.ToString("F0") : "Flexible")}</b>.<br/><br/>We will connect with you shortly to finalize details.<br/><br/>Best regards,<br/>The Hamperly Gifts Curations Team";
+    }
+
+    private void SetActiveTab(string tab)
+    {
+        activeTab = tab;
+    }
+
+    private string GetWhatsAppLink(Inquiry inquiry)
+    {
+        var rawPhone = inquiry.Customer.Phone;
+        var digitsOnly = new string(rawPhone.Where(char.IsDigit).ToArray());
+        if (digitsOnly.Length == 10)
+        {
+            digitsOnly = "91" + digitsOnly;
+        }
+        return $"https://wa.me/{digitsOnly}?text={Uri.EscapeDataString(whatsappMessage)}";
+    }
+
+    private async Task RecordWhatsAppContact(Inquiry inquiry)
+    {
+        await UpdateInquiryStatusAsync(inquiry.Id, "Contacted");
+        inquiry.Status = InquiryStatus.Contacted;
+    }
+
+    private async Task SendEmailResponseAsync(Inquiry inquiry)
+    {
+        if (string.IsNullOrEmpty(inquiry.Customer.Email)) return;
+        
+        emailSending = true;
+        emailFeedbackMessage = null;
+        
+        var success = await EmailService.SendEmailAsync(inquiry.Customer.Email, emailSubject, emailBodyText);
+        
+        emailSending = false;
+        if (success)
+        {
+            emailFeedbackSuccess = true;
+            emailFeedbackMessage = "Response email sent successfully! Status updated to 'Contacted'.";
+            await UpdateInquiryStatusAsync(inquiry.Id, "Contacted");
+            inquiry.Status = InquiryStatus.Contacted;
+        }
+        else
+        {
+            emailFeedbackSuccess = false;
+            emailFeedbackMessage = "Unable to dispatch email (SMTP credentials not configured/invalid). However, we have updated the inquiry status to 'Contacted' locally.";
+            await UpdateInquiryStatusAsync(inquiry.Id, "Contacted");
+            inquiry.Status = InquiryStatus.Contacted;
+        }
+    }
+
+    private void CloseModal()
+    {
+        selectedInquiry = null;
+    }
+}

@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="HamperStore.Core/HamperStore.Core.csproj" />
+  <Project Path="HamperStore.Infrastructure/HamperStore.Infrastructure.csproj" />
+  <Project Path="HamperStore.Web/HamperStore.Web.csproj" />
+</Solution>

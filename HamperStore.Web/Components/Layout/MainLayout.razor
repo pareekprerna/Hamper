@@ -1,0 +1,150 @@
+@inherits LayoutComponentBase
+@implements IDisposable
+@using HamperStore.Core.Entities
+@using HamperStore.Core.Interfaces
+@inject HamperStore.Web.Services.UserSessionService UserSession
+@inject NavigationManager Navigation
+@inject IHamperRepository HamperRepo
+
+<div class="page">
+    <header class="header-nav">
+        <div class="container-custom header-container">
+            <a class="logo-brand" href="" style="display: flex; align-items: center; gap: 0.75rem; text-decoration: none;">
+                <img src="/images/hampers/logo.jpg" alt="The Hamperly Gifts Logo" style="height: 42px; border-radius: 6px; border: 1px solid rgba(197,168,128,0.25);" />
+                <span style="font-family: var(--font-serif); font-size: 1.5rem; font-weight: 800; color: var(--bg-cream); letter-spacing: 0.5px;">The Hamperly <span style="color: var(--accent);">Gifts</span></span>
+            </a>
+            
+            <nav class="nav-links">
+                <NavLink class="nav-link-custom" href="" Match="NavLinkMatch.All">Home</NavLink>
+                <NavLink class="nav-link-custom" href="hampers">Catalogue</NavLink>
+                <NavLink class="nav-link-custom" href="inquire">Inquire</NavLink>
+                
+                @if (UserSession.IsAdmin)
+                {
+                    <NavLink class="nav-link-custom" href="admin/inquiries">Inquiries</NavLink>
+                    <NavLink class="nav-link-custom" href="admin/hampers">Catalog Management</NavLink>
+                }
+                else
+                {
+                    <NavLink class="nav-link-custom" href="my-inquiries">Track Inquiries</NavLink>
+                }
+            </nav>
+            
+            <div class="header-actions">
+                @if (UserSession.IsAdmin)
+                {
+                    <span class="text-white me-2 small"><i class="bi bi-person-badge-fill text-warning"></i> Admin Mode</span>
+                    <button @onclick="LogoutAdmin" class="btn-accent" style="padding: 0.5rem 1rem;">
+                        <i class="bi bi-box-arrow-right"></i> Logout
+                    </button>
+                }
+                else if (!string.IsNullOrEmpty(UserSession.CurrentUserPhone))
+                {
+                    <span class="text-white me-2 small"><i class="bi bi-person-fill"></i> Welcome, @UserSession.CurrentCustomerName!</span>
+                    <button @onclick="LogoutCustomer" class="btn-accent" style="padding: 0.5rem 1rem;">
+                        <i class="bi bi-box-arrow-right"></i> Logout
+                    </button>
+                }
+                else
+                {
+                    <a href="my-inquiries" class="btn-accent" style="background: transparent; border-color: rgba(252,251,248,0.25); color: var(--bg-cream) !important; margin-right: 0.5rem;"><i class="bi bi-search"></i> Track Order</a>
+                    <a href="inquire" class="btn-accent"><i class="bi bi-chat-left-text-fill"></i> Custom Order</a>
+                }
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <article class="content px-0">
+            @Body
+        </article>
+    </main>
+    
+    <footer class="footer-custom">
+        <div class="container-custom">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <div class="footer-col-brand" style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 1.2rem;">
+                        <img src="/images/hampers/logo.jpg" alt="The Hamperly Gifts Logo" style="height: 38px; border-radius: 5px; border: 1px solid rgba(252,251,248,0.15);" />
+                        <span style="font-family: var(--font-serif); font-size: 1.4rem; font-weight: 700; color: var(--bg-cream);">The Hamperly <span style="color: var(--accent);">Gifts</span></span>
+                    </div>
+                    <p>Curating exceptional gift hampers packed with care and designed for all occasions. Celebrating bonds, milestones, and moments of joy.</p>
+                </div>
+                <div class="footer-col">
+                    <h4>Explore</h4>
+                    <ul class="footer-links">
+                        <li><a href="">Home</a></li>
+                        <li><a href="hampers">Catalogue</a></li>
+                        <li><a href="inquire">Inquire Now</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Occasions</h4>
+                    <ul class="footer-links">
+                        @if (footerCategories != null)
+                        {
+                            @foreach (var cat in footerCategories.Take(5))
+                            {
+                                <li><a href="hampers?categoryId=@cat.Id">@cat.Name</a></li>
+                            }
+                        }
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Contact Us</h4>
+                    <div class="footer-contact-item">
+                        <i class="bi bi-geo-alt-fill"></i>
+                        <span>Jaipur, Pune, Kota</span>
+                    </div>
+                    <div class="footer-contact-item">
+                        <i class="bi bi-telephone-fill"></i>
+                        <span>+91 98765 43210</span>
+                    </div>
+                    <div class="footer-contact-item">
+                        <i class="bi bi-envelope-fill"></i>
+                        <span>support@thehamperlygifts.com</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <div>&copy; 2026 The Hamperly Gifts. All Rights Reserved.</div>
+                <div>Designed with Love for Premium Gifting.</div>
+            </div>
+        </div>
+    </footer>
+</div>
+
+<div id="blazor-error-ui" data-nosnippet>
+    An unhandled error has occurred.
+    <a href="." class="reload">Reload</a>
+    <span class="dismiss">🗙</span>
+</div>
+
+@code {
+    private List<Category> footerCategories = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await UserSession.InitializeAsync();
+        UserSession.OnSessionChanged += StateHasChanged;
+        footerCategories = await HamperRepo.GetCategoriesAsync();
+    }
+
+    private async Task LogoutAdmin()
+    {
+        await UserSession.LogoutAsync();
+        Navigation.NavigateTo("/");
+    }
+
+    private async Task LogoutCustomer()
+    {
+        await UserSession.LogoutAsync();
+        Navigation.NavigateTo("/");
+    }
+
+    public void Dispose()
+    {
+        UserSession.OnSessionChanged -= StateHasChanged;
+    }
+}

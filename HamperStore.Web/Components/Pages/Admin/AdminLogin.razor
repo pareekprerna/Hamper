@@ -1,0 +1,88 @@
+@page "/admin/login"
+@inject HamperStore.Web.Services.UserSessionService UserSession
+@inject NavigationManager Navigation
+@inject Microsoft.Extensions.Configuration.IConfiguration Configuration
+
+<PageTitle>Admin Login - The Hamperly Gifts</PageTitle>
+
+<div class="container-custom py-5 d-flex align-items-center justify-content-center" style="min-height: 70vh;">
+    <div class="inquiry-card" style="width: 100%; max-width: 450px; margin: 0 auto; box-shadow: var(--shadow-lg);">
+        <div class="text-center mb-4">
+            <div class="success-icon-wrapper" style="background-color: rgba(197, 168, 128, 0.1); color: var(--accent-dark); width: 70px; height: 70px; font-size: 2rem; margin-bottom: 1.5rem;">
+                <i class="bi bi-shield-lock-fill"></i>
+            </div>
+            <h2 class="mb-1" style="font-size: 1.8rem;">Store Admin Access</h2>
+            <p class="text-muted small">Please sign in to access the client inquiries dashboard</p>
+        </div>
+
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="alert alert-danger d-flex align-items-center small" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                <div>@errorMessage</div>
+            </div>
+        }
+
+        <EditForm Model="loginModel" OnSubmit="HandleLogin" FormName="admin-login-form">
+            <div class="form-group-custom mb-3">
+                <label for="username">Username</label>
+                <div class="search-input-wrapper">
+                    <i class="bi bi-person-fill"></i>
+                    <InputText id="username" class="search-control" style="padding-left: 2.5rem;" 
+                               placeholder="Enter admin username" @bind-Value="loginModel.Username" />
+                </div>
+            </div>
+
+            <div class="form-group-custom mb-4">
+                <label for="password">Password</label>
+                <div class="search-input-wrapper">
+                    <i class="bi bi-key-fill"></i>
+                    <InputText type="password" id="password" class="search-control" style="padding-left: 2.5rem;" 
+                               placeholder="Enter admin password" @bind-Value="loginModel.Password" />
+                </div>
+            </div>
+
+            <button type="submit" class="btn-form-submit w-100" style="margin-top: 0;">
+                <i class="bi bi-box-arrow-in-right"></i> Sign In to Dashboard
+            </button>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    private AdminLoginModel loginModel = new();
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await UserSession.InitializeAsync();
+    }
+
+    private async Task HandleLogin()
+    {
+        errorMessage = null;
+        Console.WriteLine($"[DEBUG] AdminLogin HandleLogin called. Username: {loginModel.Username}");
+
+        var expectedUsername = Configuration["AdminSettings:Username"] ?? "admin";
+        var expectedPassword = Configuration["AdminSettings:Password"] ?? "admin123";
+
+        if (string.Equals(loginModel.Username, expectedUsername, StringComparison.OrdinalIgnoreCase) && 
+            loginModel.Password == expectedPassword)
+        {
+            await UserSession.LoginAsAdminAsync();
+            Console.WriteLine("[DEBUG] AdminLogin success. Redirecting to admin/inquiries...");
+            Navigation.NavigateTo("admin/inquiries");
+        }
+        else
+        {
+            Console.WriteLine("[DEBUG] AdminLogin failed. Credentials do not match expected settings.");
+            errorMessage = "Invalid admin username or password. Please try again.";
+        }
+    }
+
+    public class AdminLoginModel
+    {
+        public string Username { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
+    }
+}

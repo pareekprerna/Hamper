@@ -1,0 +1,11 @@
+C:\Users\Anshu\Downloads\Freelance\Hamper\HamperStore.Core\bin\Debug\net9.0\HamperStore.Core.deps.json
+C:\Users\Anshu\Downloads\Freelance\Hamper\HamperStore.Core\bin\Debug\net9.0\HamperStore.Core.dll
+C:\Users\Anshu\Downloads\Freelance\Hamper\HamperStore.Core\bin\Debug\net9.0\HamperStore.Core.pdb
+C:\Users\Anshu\Downloads\Freelance\Hamper\HamperStore.Core\obj\Debug\net9.0\HamperStore.Core.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Anshu\Downloads\Freelance\Hamper\HamperStore.Core\obj\Debug\net9.0\HamperStore.Core.AssemblyInfoInputs.cache
+C:\Users\Anshu\Downloads\Freelance\Hamper\HamperStore.Core\obj\Debug\net9.0\HamperStore.Core.AssemblyInfo.cs
+C:\Users\Anshu\Downloads\Freelance\Hamper\HamperStore.Core\obj\Debug\net9.0\HamperStore.Core.csproj.CoreCompileInputs.cache
+C:\Users\Anshu\Downloads\Freelance\Hamper\HamperStore.Core\obj\Debug\net9.0\HamperStore.Core.dll
+C:\Users\Anshu\Downloads\Freelance\Hamper\HamperStore.Core\obj\Debug\net9.0\refint\HamperStore.Core.dll
+C:\Users\Anshu\Downloads\Freelance\Hamper\HamperStore.Core\obj\Debug\net9.0\HamperStore.Core.pdb
+C:\Users\Anshu\Downloads\Freelance\Hamper\HamperStore.Core\obj\Debug\net9.0\ref\HamperStore.Core.dll

@@ -1,0 +1,125 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\Anshu\\Downloads\\Freelance\\Hamper\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{7E3131F3-507C-A702-5647-A9DE85459466}|HamperStore.Core\\HamperStore.Core.csproj|c:\\users\\anshu\\downloads\\freelance\\hamper\\hamperstore.core\\interfaces\\iinquiryservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{7E3131F3-507C-A702-5647-A9DE85459466}|HamperStore.Core\\HamperStore.Core.csproj|solutionrelative:hamperstore.core\\interfaces\\iinquiryservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9680F609-6A27-6ACD-C8D8-2E9DA8BFE4CF}|HamperStore.Web\\HamperStore.Web.csproj|c:\\users\\anshu\\downloads\\freelance\\hamper\\hamperstore.web\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9680F609-6A27-6ACD-C8D8-2E9DA8BFE4CF}|HamperStore.Web\\HamperStore.Web.csproj|solutionrelative:hamperstore.web\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{52FDB802-8CDC-F0B6-026B-2F79ED6CCBA8}|HamperStore.Infrastructure\\HamperStore.Infrastructure.csproj|c:\\users\\anshu\\downloads\\freelance\\hamper\\hamperstore.infrastructure\\data\\dbseeder.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{52FDB802-8CDC-F0B6-026B-2F79ED6CCBA8}|HamperStore.Infrastructure\\HamperStore.Infrastructure.csproj|solutionrelative:hamperstore.infrastructure\\data\\dbseeder.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9680F609-6A27-6ACD-C8D8-2E9DA8BFE4CF}|HamperStore.Web\\HamperStore.Web.csproj|c:\\users\\anshu\\downloads\\freelance\\hamper\\hamperstore.web\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{9680F609-6A27-6ACD-C8D8-2E9DA8BFE4CF}|HamperStore.Web\\HamperStore.Web.csproj|solutionrelative:hamperstore.web\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{52FDB802-8CDC-F0B6-026B-2F79ED6CCBA8}|HamperStore.Infrastructure\\HamperStore.Infrastructure.csproj|c:\\users\\anshu\\downloads\\freelance\\hamper\\hamperstore.infrastructure\\hamperstore.infrastructure.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
+      "RelativeMoniker": "D:0:0:{52FDB802-8CDC-F0B6-026B-2F79ED6CCBA8}|HamperStore.Infrastructure\\HamperStore.Infrastructure.csproj|solutionrelative:hamperstore.infrastructure\\hamperstore.infrastructure.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "IInquiryService.cs",
+              "DocumentMoniker": "C:\\Users\\Anshu\\Downloads\\Freelance\\Hamper\\HamperStore.Core\\Interfaces\\IInquiryService.cs",
+              "RelativeDocumentMoniker": "HamperStore.Core\\Interfaces\\IInquiryService.cs",
+              "ToolTip": "C:\\Users\\Anshu\\Downloads\\Freelance\\Hamper\\HamperStore.Core\\Interfaces\\IInquiryService.cs",
+              "RelativeToolTip": "HamperStore.Core\\Interfaces\\IInquiryService.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAAkAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-07-09T14:38:09.891Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "DbSeeder.cs",
+              "DocumentMoniker": "C:\\Users\\Anshu\\Downloads\\Freelance\\Hamper\\HamperStore.Infrastructure\\Data\\DbSeeder.cs",
+              "RelativeDocumentMoniker": "HamperStore.Infrastructure\\Data\\DbSeeder.cs",
+              "ToolTip": "C:\\Users\\Anshu\\Downloads\\Freelance\\Hamper\\HamperStore.Infrastructure\\Data\\DbSeeder.cs",
+              "RelativeToolTip": "HamperStore.Infrastructure\\Data\\DbSeeder.cs",
+              "ViewState": "AgIAANEAAAAAAAAAAAArwF8BAAAiAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-07-09T11:29:10.337Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "Program.cs",
+              "DocumentMoniker": "C:\\Users\\Anshu\\Downloads\\Freelance\\Hamper\\HamperStore.Web\\Program.cs",
+              "RelativeDocumentMoniker": "HamperStore.Web\\Program.cs",
+              "ToolTip": "C:\\Users\\Anshu\\Downloads\\Freelance\\Hamper\\HamperStore.Web\\Program.cs",
+              "RelativeToolTip": "HamperStore.Web\\Program.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA8AAAA+AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-07-09T09:39:13.007Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "appsettings.json",
+              "DocumentMoniker": "C:\\Users\\Anshu\\Downloads\\Freelance\\Hamper\\HamperStore.Web\\appsettings.json",
+              "RelativeDocumentMoniker": "HamperStore.Web\\appsettings.json",
+              "ToolTip": "C:\\Users\\Anshu\\Downloads\\Freelance\\Hamper\\HamperStore.Web\\appsettings.json",
+              "RelativeToolTip": "HamperStore.Web\\appsettings.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAADAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2026-07-09T09:38:28.358Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{1c4feeaa-4718-4aa9-859d-94ce25d182ba}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{e5c86464-96be-4d7c-9a8b-abcb3bbf5f92}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{aa2115a1-9712-457b-9047-dbb71ca2cdd2}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:1724239918:0:{bf84ea66-d821-4dba-b1b1-2777d8574775}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:158155986:0:{bf84ea66-d821-4dba-b1b1-2777d8574775}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "HamperStore.Infrastructure.csproj",
+              "DocumentMoniker": "C:\\Users\\Anshu\\Downloads\\Freelance\\Hamper\\HamperStore.Infrastructure\\HamperStore.Infrastructure.csproj",
+              "RelativeDocumentMoniker": "HamperStore.Infrastructure\\HamperStore.Infrastructure.csproj",
+              "ToolTip": "C:\\Users\\Anshu\\Downloads\\Freelance\\Hamper\\HamperStore.Infrastructure\\HamperStore.Infrastructure.csproj",
+              "RelativeToolTip": "HamperStore.Infrastructure\\HamperStore.Infrastructure.csproj",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
+              "WhenOpened": "2026-07-09T08:47:35.132Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
