@@ -562,25 +562,28 @@
 
         if (editingHamperId.HasValue)
         {
-            var existing = await HamperRepo.GetByIdAsync(editingHamperId.Value);
-            if (existing != null)
-            {
-                existing.Name = tempName;
-                existing.Slug = slug;
-                existing.Description = tempDescription;
-                existing.BasePrice = tempBasePrice;
-                existing.CategoryId = tempCategoryId;
-                existing.IsCustomizable = tempIsCustomizable;
-                existing.AvailableCities = selectedCityEntities;
-                existing.Items = itemEntities;
-                
-                // Add the image
-                primaryImage.HamperId = existing.Id;
-                existing.Images = new List<HamperImage> { primaryImage };
+            var localHamper = allHampers.FirstOrDefault(h => h.Id == editingHamperId.Value);
+            var existingActiveStatus = localHamper?.IsActive ?? true;
+            var existingCreatedAt = localHamper?.CreatedAt ?? DateTime.UtcNow;
 
-                await HamperRepo.UpdateHamperAsync(existing);
-                statusMessage = $"Hamper '{tempName}' updated successfully in the catalog.";
-            }
+            var updatedHamper = new Hamper
+            {
+                Id = editingHamperId.Value,
+                Name = tempName,
+                Slug = slug,
+                Description = tempDescription,
+                BasePrice = tempBasePrice,
+                CategoryId = tempCategoryId,
+                IsCustomizable = tempIsCustomizable,
+                IsActive = existingActiveStatus,
+                CreatedAt = existingCreatedAt,
+                AvailableCities = selectedCityEntities,
+                Items = itemEntities,
+                Images = new List<HamperImage> { primaryImage }
+            };
+
+            await HamperRepo.UpdateHamperAsync(updatedHamper);
+            statusMessage = $"Hamper '{tempName}' updated successfully in the catalog.";
         }
         else
         {
