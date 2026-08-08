@@ -1,5 +1,6 @@
-# Local credentials file
+# Local credentials and configuration files
 .git_local_repo_credentials
+.env
 
 # SQLite Database files
 HamperStore.db
