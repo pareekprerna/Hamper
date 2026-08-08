@@ -365,10 +365,14 @@
 
     private async Task ToggleHamperStatusAsync(Hamper hamper)
     {
-        hamper.IsActive = !hamper.IsActive;
-        await HamperRepo.UpdateHamperAsync(hamper);
-        statusMessage = $"Hamper '{hamper.Name}' status updated successfully to {(hamper.IsActive ? "Active" : "Inactive")}.";
-        await LoadDataAsync();
+        var fullHamper = await HamperRepo.GetByIdAsync(hamper.Id);
+        if (fullHamper != null)
+        {
+            fullHamper.IsActive = !fullHamper.IsActive;
+            await HamperRepo.UpdateHamperAsync(fullHamper);
+            statusMessage = $"Hamper '{fullHamper.Name}' status updated successfully to {(fullHamper.IsActive ? "Active" : "Inactive")}.";
+            await LoadDataAsync();
+        }
     }
 
     // Modal Add/Edit Actions
