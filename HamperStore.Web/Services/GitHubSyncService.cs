@@ -89,7 +89,7 @@ namespace HamperStore.Web.Services
                     Directory.CreateDirectory(uploadsPath);
                 }
 
-                var files = await GetGitHubDirectoryContentsAsync("wwwroot/images/hampers/uploads");
+                var files = await GetGitHubDirectoryContentsAsync("HamperStore.Web/wwwroot/images/hampers/uploads");
                 if (files != null && files.Any())
                 {
                     _logger.LogInformation("Found {Count} uploaded images on GitHub. Downloading missing assets...", files.Count);

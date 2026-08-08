@@ -541,7 +541,7 @@
                 await File.WriteAllBytesAsync(savePath, fileBytes);
 
                 // Sync the image file in background
-                _ = Task.Run(() => GitHubSync.SyncFileAsync($"wwwroot/images/hampers/uploads/{uniqueFileName}", fileBytes));
+                _ = Task.Run(() => GitHubSync.SyncFileAsync($"HamperStore.Web/wwwroot/images/hampers/uploads/{uniqueFileName}", fileBytes));
 
                 tempImageUrl = $"/images/hampers/uploads/{uniqueFileName}";
             }
