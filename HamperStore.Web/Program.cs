@@ -7,6 +7,10 @@ using HamperStore.Web.Components;
 using Microsoft.EntityFrameworkCore;
 using System.IO;
 
+// Force .NET to use polling file watchers instead of OS inotify handles
+// to prevent "inotify limit reached" crashes on shared Linux hosting (Render, Fly.io, etc.)
+Environment.SetEnvironmentVariable("DOTNET_USE_POLLING_FILE_WATCHER", "1");
+
 // Load local .env file if it exists (for local development variables)
 var currentDirectory = Directory.GetCurrentDirectory();
 var envPath = Path.Combine(currentDirectory, ".env");

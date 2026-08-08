@@ -26,4 +26,6 @@ COPY --from=publish /app/publish .
 RUN mkdir -p wwwroot/images/hampers/uploads
 # Set ASPNETCORE_URLS to bind to 8080 (standard for Render, Fly.io, Railway)
 ENV ASPNETCORE_URLS=http://+:8080
+# Force polling file watchers to avoid inotify OS handle exhaustion crashes on Linux hosts
+ENV DOTNET_USE_POLLING_FILE_WATCHER=1
 ENTRYPOINT ["dotnet", "HamperStore.Web.dll"]
