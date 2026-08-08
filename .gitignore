@@ -3,14 +3,14 @@
 .env
 
 # SQLite Database files
-HamperStore.db
-HamperStore.db-journal
-HamperStore.db-shm
-HamperStore.db-wal
+**/*.db
+**/*.db-journal
+**/*.db-shm
+**/*.db-wal
 
 # Dynamic product image uploads
-wwwroot/images/hampers/uploads/*
-!wwwroot/images/hampers/uploads/.gitkeep
+**/wwwroot/images/hampers/uploads/*
+!**/wwwroot/images/hampers/uploads/.gitkeep
 
 # .NET / MSBuild compilation outputs
 bin/
