@@ -82,6 +82,14 @@ namespace HamperStore.Infrastructure.Repositories
 
             if (existing != null)
             {
+                // If they are the same instance, EF Core is already tracking all changes.
+                // We just save changes and return to avoid deleting and losing collections.
+                if (ReferenceEquals(existing, hamper))
+                {
+                    await _context.SaveChangesAsync();
+                    return;
+                }
+
                 // Update scalar properties
                 _context.Entry(existing).CurrentValues.SetValues(hamper);
 
