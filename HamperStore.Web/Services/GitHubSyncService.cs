@@ -42,7 +42,20 @@ namespace HamperStore.Web.Services
             _repo = configuration["GITHUB_REPO"] ?? Environment.GetEnvironmentVariable("GITHUB_REPO");
             _branch = configuration["GITHUB_BRANCH"] ?? Environment.GetEnvironmentVariable("GITHUB_BRANCH") ?? "db-state";
 
-            _dbPath = Path.Combine(Directory.GetCurrentDirectory(), "HamperStore.db");
+            // Resolve database path dynamically from the connection string to prevent working directory mismatches in Docker/Render
+            var connectionString = configuration.GetConnectionString("DefaultConnection");
+            var relativeDbPath = "HamperStore.db"; // Fallback default
+            if (connectionString != null && connectionString.StartsWith("Data Source=", StringComparison.OrdinalIgnoreCase))
+            {
+                var rawPath = connectionString.Substring("Data Source=".Length).Trim();
+                if (!string.IsNullOrEmpty(rawPath))
+                {
+                    relativeDbPath = rawPath;
+                }
+            }
+            _dbPath = Path.IsPathRooted(relativeDbPath) 
+                ? relativeDbPath 
+                : Path.Combine(_env.ContentRootPath, relativeDbPath);
 
             if (IsConfigured())
             {

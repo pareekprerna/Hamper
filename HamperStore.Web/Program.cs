@@ -51,8 +51,18 @@ builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddSingleton<GitHubSyncService>();
 builder.Services.AddHostedService(sp => sp.GetRequiredService<GitHubSyncService>());
 
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+if (connectionString != null && connectionString.StartsWith("Data Source=", StringComparison.OrdinalIgnoreCase))
+{
+    var rawPath = connectionString.Substring("Data Source=".Length).Trim();
+    if (!string.IsNullOrEmpty(rawPath) && !Path.IsPathRooted(rawPath))
+    {
+        var absoluteDbPath = Path.Combine(builder.Environment.ContentRootPath, rawPath);
+        connectionString = $"Data Source={absoluteDbPath}";
+    }
+}
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlite(connectionString));
 
 var app = builder.Build();
 using (var scope = app.Services.CreateScope())
