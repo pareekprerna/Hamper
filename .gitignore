@@ -1,0 +1,31 @@
+# Local credentials file
+.git_local_repo_credentials
+
+# SQLite Database files
+HamperStore.db
+HamperStore.db-journal
+HamperStore.db-shm
+HamperStore.db-wal
+
+# Dynamic product image uploads
+wwwroot/images/hampers/uploads/*
+!wwwroot/images/hampers/uploads/.gitkeep
+
+# .NET / MSBuild compilation outputs
+bin/
+obj/
+publish/
+
+# IDE and tooling settings
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# OS generated files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
